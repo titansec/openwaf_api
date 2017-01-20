@@ -16,9 +16,11 @@ Api
 stat
 ----
 
+有关统计模块信息，详见[openwaf_reqstat](https://github.com/titansec/openwaf_reqstat)模块
+
 * API: GET 127.0.0.1:61111/api/stat
 
-    获取所有策略的统计信息
+    获取全局（MAIN）统计信息
 
 * API: GET 127.0.0.1:61111/api/stat/{policy_uuid}
 
@@ -28,6 +30,10 @@ stat
 ```
         GET 127.0.0.1:61111/api/stat/twaf_policy_conf
 ```
+
+* API: GET 127.0.0.1:61111/api/stat/policy_all
+
+    获取所有策略（包含GLOBAL）的统计信息
 
 * API：DELETE 127.0.0.1:61111/api/stat
 

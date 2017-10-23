@@ -22,12 +22,12 @@ Table of Contents
 access_rule
 ===========
 
-* [GET](#get)
-* [POST](#post)
-* [PUT](#put)
-* [DELETE](#delete)
+* [GET](#access_rule_get)
+* [POST](#access_rule_post)
+* [PUT](#access_rule_put)
+* [DELETE](#access_rule_delete)
 
-GET
+<a id="access_rule_get" name="access_rule_get">GET</a>
 ---
 
 * API: GET /webapadmin/access_rule/{user}/{uuid}
@@ -46,8 +46,8 @@ GET
 
 [Back to TOC](#table-of-contents)
 
-POST
-----
+<a id="access_rule_post" name="access_rule_post">POST</a>
+---
 
 * API: POST /webapadmin/access_rule/{user}/{pos}
 
@@ -107,7 +107,8 @@ POST
 
 [Back to TOC](#table-of-contents)
 
-PUT
+
+<a id="access_rule_put" name="access_rule_put">PUT</a>
 ---
 
 * API: PUT /webapadmin/access_rule/{user}/{uuid}
@@ -144,8 +145,9 @@ PUT
 
 [Back to TOC](#table-of-contents)
 
-DELETE
-------
+
+<a id="access_rule_delete" name="access_rule_delete">DELETE</a>
+---
 
 * API: DELETE /webapadmin/access_rule/{user}/{uuid}
 
@@ -189,12 +191,12 @@ DELETE
 policy
 ======
 
-* [GET](#get)
-* [POST](#post)
-* [PUT](#put)
-* [DELETE](#delete)
+* [GET](#policy_get)
+* [POST](#policy_post)
+* [PUT](#policy_put)
+* [DELETE](#policy_delete)
 
-GET
+<a id="policy_get" name="policy_get">GET</a>
 ---
 
 * API: GET /webapadmin/policy/{policy_uuid}
@@ -215,8 +217,8 @@ GET
 
 [Back to TOC](#table-of-contents)
 
-POST
-----
+<a id="policy_post" name="policy_post">POST</a>
+---
 
 * API: POST /webapadmin/policy/{policy_uuid}
 
@@ -244,7 +246,7 @@ POST
 
 [Back to TOC](#table-of-contents)
 
-PUT
+<a id="policy_put" name="policy_put">PUT</a>
 ---
 
 * API: PUT /webapadmin/policy/{policy_uuid}
@@ -282,8 +284,8 @@ PUT
 
 [Back to TOC](#table-of-contents)
 
-DELETE
-------
+<a id="policy_delete" name="policy_delete">DELETE</a>
+---
 
 * API: DELETE /webapadmin/policy/{policy_uuid}
 
@@ -322,12 +324,12 @@ DELETE
 stat
 ====
 
-* [GET](#get)
-* [DELETE](#delete)
+* [GET](#stat_get)
+* [DELETE](#stat_delete)
 
 有关统计模块信息，详见 [openwaf_reqstat](https://github.com/titansec/openwaf_reqstat) 模块
 
-GET
+<a id="stat_get" name="stat_get">GET</a>
 ---
 
 * API: GET /api/stat
@@ -356,8 +358,8 @@ PS：
         
 [Back to TOC](#table-of-contents)
     
-DELETE
-------
+<a id="stat_delete" name="stat_delete">DELETE</a>
+---
     
 * API：DELETE /api/stat
 
@@ -368,9 +370,9 @@ DELETE
 version
 =======
 
-* [GET](#get)
+* [GET](#version_get)
 
-GET
+<a id="version_get" name="version_get">GET</a>
 ---
 
 * API: GET /webapadmin/version
@@ -386,9 +388,9 @@ GET
 shm
 ===
 
-* [GET](#get)
+* [GET](#shm_get)
 
-GET
+<a id="shm_get" name="shm_get">GET</a>
 ---
 
 * API: GET /webapadmin/shm/{shm_name}
@@ -402,9 +404,9 @@ GET
 timer_count
 ===========
 
-* [GET](#get)
+* [GET](#timer_count_get)
 
-GET
+<a id="timer_count_get" name="timer_count_get">GET</a>
 ---
 
 * API: GET /webapadmin/timer_count
@@ -428,9 +430,9 @@ GET
 engine_info
 ===========
 
-* [GET](#get)
+* [GET](#engine_info_get)
 
-GET
+<a id="engine_info_get" name="engine_info_get">GET</a>
 ---
 
 * API: GET /webapadmin/engine_info

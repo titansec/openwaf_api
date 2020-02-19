@@ -23,6 +23,8 @@ Table of Contents
 * [shm](#shm)
 * [timer_count](#timer_count)
 * [engine_info](#engine_info)
+* [error](#error)
+* [luajit](#luajit)
 
 access_rule
 ===========
@@ -30,6 +32,7 @@ access_rule
 * [GET](#access_rule_get)
 * [POST](#access_rule_post)
 * [PUT](#access_rule_put)
+* [PATCH](#access_rule_patch)
 * [DELETE](#access_rule_delete)
 
 <a id="access_rule_get" name="access_rule_get">GET</a>
@@ -106,41 +109,76 @@ access_rule
             ]
         }
     }
+    
+    ----------------------------------
+    
+    openwaf v1.0.0β 版本中，支持批量添加接入规则
+    
+    例: 初始接入规则如下：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"aa","uuid":"aa"},
+                {"user":"bb","uuid":"bb"}
+            ]
+        }
+    }
+    
+    在用户 aa 中，添加两条接入规则，且排序为 2
+    curl http://127.0.0.1:61111/api/access_rule/aa/2 -X POST -d '{"config":{"user":"aa","uuid":"aaa1"},{"user":"aa","uuid":"aaa2"}}'
+    
+    在用户 bb 中，添加两条接入规则，且添加至 uuid 为 bb 的下一条
+    curl http://127.0.0.1:61111/api/access_rule/bb/uuid/bbb -X POST -d '{"config":{"user":"bb","uuid":"bbb1"},{"user":"bb","uuid":"bbb2"}}'
+    
+    接入规则结果如下：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"aa","uuid":"aa"},
+                {"user":"aa","uuid":"aaa1"},
+                {"user":"aa","uuid":"aaa2"},
+                {"user":"bb","uuid":"bb"},
+                {"user":"bb","uuid":"bbb1"},
+                {"user":"bb","uuid":"bbb2"}
+            ]
+        }
+    }
 
     接入规则添加成功
 ```
 
 [Back to TOC](#table-of-contents)
 
-
 <a id="access_rule_put" name="access_rule_put">PUT</a>
 ---
 
 * API: PUT /api/access_rule/{user}/{uuid}
 
-    功能：修改已有接入规则
+    功能：全量修改已有接入规则配置
 
     注：user 为用户 ID, uuid 为接入规则 ID
+    
+    从 OpenWAF v1.0.0β 版本开始，PUT API 由部分修改配置 改为 全量修改配置
 
 ```
     例：当前接入规则如下：
     {
         "twaf_access_rule": {
             "rules":[
-                {"user":"aa","uuid":"aa", "port":1},
-                {"user":"bb","uuid":"bb", "port":2}
+                {"user":"u1","uuid":"id1", "port":88, "host":"a.com","forward":"test"},
+                {"user":"u2","uuid":"id2", "port":90, "host":"b.com"}
             ]
         }
     }
 
-    curl http://127.0.0.1:61111/api/access_rule/aa/aa -X PUT -d '{"config":{"port":5,"server":"1.1.1.1"}}'
+    curl http://127.0.0.1:61111/api/access_rule/u1/id1 -X PUT -d '{"config":{"user":"u1","uuid":"id1", "port":80, "host":"a.com"}}'
 
     修改后接入规则如下：
     {
         "twaf_access_rule": {
             "rules":[
-                {"user":"aa","uuid":"aa", "port":5,"server":"1.1.1.1"},
-                {"user":"bb","uuid":"bb", "port":2}
+                {"user":"u1","uuid":"id1", "port":80, "host":"a.com"},
+                {"user":"u2","uuid":"id2", "port":90, "host":"b.com"}
             ]
         }
     }
@@ -150,11 +188,47 @@ access_rule
 
 [Back to TOC](#table-of-contents)
 
+<a id="access_rule_patch" name="access_rule_patch">PATCH</a>
+---
+
+* API: PATCH /api/access_rule/{user}/{uuid}
+
+    功能：部分修改已有接入规则配置
+
+    注：user 为用户 ID, uuid 为接入规则 ID
+    
+```
+    例：当前接入规则如下：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"u1","uuid":"id1", "port":80, "host":"a.com"},
+                {"user":"u2","uuid":"id2", "port":90, "host":"b.com"}
+            ]
+        }
+    }
+
+    curl http://127.0.0.1:61111/api/access_rule/u1/id1 -X PATCH -d '{"config":{"port":88,"forward":"test"}}'
+
+    修改后接入规则如下：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"u1","uuid":"id1", "port":88, "host":"a.com","forward":"test"},
+                {"user":"u2","uuid":"id2", "port":90, "host":"b.com"}
+            ]
+        }
+    }
+
+    接入规则修改成功
+```
+
+[Back to TOC](#table-of-contents)
 
 <a id="access_rule_delete" name="access_rule_delete">DELETE</a>
 ---
 
-* API: DELETE /api/access_rule/{user}/{uuid}
+* API: DELETE /api/access_rule/{user}/{uuid1}/{uuid2}/...
 
     功能：删除接入规则
 
@@ -184,6 +258,36 @@ access_rule
                 {"user":"aa","uuid":"aa"},
                 {"user":"aa","uuid":"aaa"},
                 {"user":"bb","uuid":"bb"}
+            ]
+        }
+    }
+    
+    ---------------------------------
+    
+    openwaf 从 v1.0.0β 支持批量删除某用户下接入规则
+    
+    例：当前接入规则如下：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"aa","uuid":"aaaa"},
+                {"user":"aa","uuid":"aa"},
+                {"user":"aa","uuid":"aaa"},
+                {"user":"bb","uuid":"bb"},
+                {"user":"bb","uuid":"bbb"}
+            ]
+        }
+    }
+
+    curl http://127.0.0.1:61111/api/access_rule/aa/aaa/aaaa -X DELETE
+
+    接入规则变为：
+    {
+        "twaf_access_rule": {
+            "rules":[
+                {"user":"aa","uuid":"aa"},
+                {"user":"bb","uuid":"bb"},
+                {"user":"bb","uuid":"bbb"}
             ]
         }
     }
@@ -252,6 +356,79 @@ rules
     注: rule_id为全局唯一的规则ID
 
     此API暂不支持
+    
+[Back to TOC](#table-of-contents)
+
+rule_set
+========
+
+规则集 API。从 v1.0.0β 版本开始支持此API。
+
+规则集是对系统规则进行对象化，v0.0.6及之前版本，策略中twaf_secrules默认执行所有系统规则；从v1.0.0β开始，twaf_secrules模块引用规则集，执行指定规则。
+
+* [GET](#rule_set_get)
+* [POST](#rule_set_post)
+* [PUT](#rule_set_put)
+* [DELETE](#rule_set_delete)
+
+<a id="rule_set_get" name="rule_set_get">GET</a>
+---
+
+* API: GET /api/rule_set/{rule_set_uuid}
+
+    功能: 查询某规则集信息
+
+    注: rule_set_uuid 为规则集 ID，非必填
+    
+[Back to TOC](#table-of-contents)
+
+<a id="rule_set_post" name="rule_set_post">POST</a>
+---
+
+* API: POST /api/rule_set/{rule_set_uuid}
+
+    功能: 新增规则集
+
+    注: rule_set_uuid 为规则集 ID，必填
+
+```
+    # 如，新增规则集set_123，包含系统规则300002和300003
+    curl http://127.0.0.1:61111/api/rule_set/set_123 -X POST -d '{"config":["300002","300003"]}'
+    
+    此时查询规则集set_123信息
+    curl http://localhost:60001/webapadmin/rule_set/set_123
+    
+    获得响应内容：{"success":1,"result":{"body_filter":{},"access":["300002","300003"],"header_filter":{}}}
+    
+    此时已成功添加规则集set_123，可在策略中twaf_secrules模块引用此规则集
+
+```
+    
+[Back to TOC](#table-of-contents)
+
+<a id="rule_set_put" name="rule_set_put">PUT</a>
+---
+
+* API: PUT /api/rule_set/{rule_set_uuid}
+
+    功能: 全量替换某规则集
+
+    注: rule_set_uuid 为规则集 ID，必填
+    
+* API: PUT /api/rule_set
+
+    功能: 全量替换所有规则集
+    
+[Back to TOC](#table-of-contents)
+
+<a id="rule_set_delete" name="rule_set_delete">DELETE</a>
+---
+
+* API: DELETE /api/rule_set/{rule_set_uuid}
+
+    功能: 删除某规则集
+
+    注: rule_set_uuid 为规则集 ID，必填
     
 [Back to TOC](#table-of-contents)
 
@@ -432,6 +609,7 @@ policy
 * [GET](#policy_get)
 * [POST](#policy_post)
 * [PUT](#policy_put)
+* [PATCH](#policy_patch)
 * [DELETE](#policy_delete)
 
 <a id="policy_get" name="policy_get">GET</a>
@@ -489,7 +667,7 @@ policy
 
 * API: PUT /api/policy/{policy_uuid}
 
-    功能: 覆盖已存在的策略
+    功能: 全量覆盖已存在的策略
 
     注：policy_uuid 为已存在的策略 ID
 
@@ -520,6 +698,17 @@ policy
     修改策略成功
 ```
 
+[Back to TOC](#table-of-contents)
+
+<a id="policy_patch" name="policy_patch">PATCH</a>
+---
+
+* API: PATCH /api/policy/{policy_uuid}
+
+    功能: 部分修改已存在的策略配置
+
+    注：policy_uuid 为已存在的策略 ID
+    
 [Back to TOC](#table-of-contents)
 
 <a id="policy_delete" name="policy_delete">DELETE</a>
@@ -740,6 +929,55 @@ engine_info
         },
         "success": 1
     }
+```
+
+errlog
+======
+
+* [GET](#errlog_get)
+
+<a id="errlog_get" name="errlog_get">GET</a>
+---
+
+* API: GET /api/errlog/{number}
+
+    功能: 打印错误信息
+    
+    注：number 为日志条数，默认打印最近 100 条日志。非必填。
+    
+```
+    curl http://127.0.0.1:61111/api/errlog | python -m json.tool
+
+    {
+        "result": [
+            4,
+            1561024938.558,
+            "2019/06/20 18:02:18 [error] 121297#0: *973145 [lua] info.lua:189: hahaha, client: 127.0.0.1, server: nosuchdomain, request: \"GET /api/errlog HTTP/1.1\", host: \"127.0.0.1:61111\""
+        ],
+        "success": 1
+    }
+
+    PS: 默认格式{ level1, time1, msg1, level2, time2, msg2, ... }，我们只需关心 msgX 即可
+```
+
+更多有关error信息，可查看openresty的[errlog](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/errlog.md#get_logs)描述
+    
+luajit
+======
+
+* [GET](#luajit_get)
+
+<a id="luajit_get" name="luajit_get">GET</a>
+---
+
+* API: GET /api/luajit
+
+    功能: 查看 lua 及 luajit 版本信息
+    
+```
+    curl http://127.0.0.1:61111/api/luajit
+
+    {"success":1,"result":{"lua":"Lua 5.1","luajit":"LuaJIT 2.1.0-beta3"}}
 ```
 
 [Back to TOC](#table-of-contents)

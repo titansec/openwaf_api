@@ -13,6 +13,7 @@ Table of Contents
 
 * [access_rule](#access_rule)
 * [rules](#rules)
+* [rule_set](#rule_set)
 * [system_rules_exclude](#system_rules_exclude)
 * [user_defined_rules](#user_defined_rules)
 * [policy](#policy)
@@ -23,7 +24,7 @@ Table of Contents
 * [shm](#shm)
 * [timer_count](#timer_count)
 * [engine_info](#engine_info)
-* [error](#error)
+* [errlog](#errlog)
 * [luajit](#luajit)
 
 access_rule
@@ -931,6 +932,8 @@ engine_info
     }
 ```
 
+[Back to TOC](#table-of-contents)
+
 errlog
 ======
 
@@ -961,6 +964,8 @@ errlog
 ```
 
 更多有关error信息，可查看openresty的[errlog](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/errlog.md#get_logs)描述
+
+[Back to TOC](#table-of-contents)
     
 luajit
 ======

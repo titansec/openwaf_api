@@ -469,6 +469,33 @@ pset
 ```
     示例: 新增名为 crawler_01 的爬虫库
     curl http://127.0.0.1:61111/api/pset/crawler_01 -X POST -d '{"config":["baidu","google","sogou"]}'
+    
+    示例：在SecRule中引用刚刚自定义的爬虫库
+    {
+        "id": "1000003",
+        "release_version": "858",
+        "charactor_version": "001",
+        "disable": false,
+        "opts": {
+            "nolog": false
+        },
+        "phase": "access",
+        "action": "deny",
+        "meta": 403,
+        "severity": "high",
+        "rule_name": "iputil",
+        "desc": "禁止包含baidu等关键字的user-agent访问",
+        "match": [{
+            "vars": [{
+                "var": "REQUEST_HEADERS",
+                "parse": {
+                    "specific": "user-agent",
+                }
+            }],
+            "operator": "contains",
+            "pset": "crawler_01"                   -- 这里等价于 "pattern": ["baidu","google","sogou"]
+        }]
+    }
 ```
     
 <a id="pset_put" name="pset_put">PUT</a>

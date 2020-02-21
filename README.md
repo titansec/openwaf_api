@@ -14,6 +14,7 @@ Table of Contents
 * [access_rule](#access_rule)
 * [rules](#rules)
 * [rule_set](#rule_set)
+* [pset](#pset)
 * [system_rules_exclude](#system_rules_exclude)
 * [user_defined_rules](#user_defined_rules)
 * [policy](#policy)
@@ -397,7 +398,7 @@ rule_set
     curl http://127.0.0.1:61111/api/rule_set/set_123 -X POST -d '{"config":["300002","300003"]}'
     
     此时查询规则集set_123信息
-    curl http://localhost:60001/webapadmin/rule_set/set_123
+    curl http://127.0.0.1:61111/api/rule_set/set_123
     
     获得响应内容：{"success":1,"result":{"body_filter":{},"access":["300002","300003"],"header_filter":{}}}
     
@@ -430,6 +431,68 @@ rule_set
     功能: 删除某规则集
 
     注: rule_set_uuid 为规则集 ID，必填
+    
+[Back to TOC](#table-of-contents)
+
+pset
+====
+
+自定义对象(集合)。对应规则引擎(twaf_secrules)中 pset 参数。
+
+由于 pf 不利于初始化及动态赋值，因此新增 pset 来代替 pf。
+
+当前版本，pset 集合的值默认均是数组类型。
+
+* [GET](#pset_get)
+* [POST](#pset_post)
+* [PUT](#pset_put)
+* [DELETE](#pset_delete)
+
+<a id="pset_get" name="pset_get">GET</a>
+---
+
+* API: GET /api/pset/{pset_uuid}
+
+    功能：查询某集合信息
+    
+    注: pset_uuid 为集合id，非必填
+    
+<a id="pset_post" name="pset_post">POST</a>
+---
+
+* API: POST /api/pset/{pset_uuid}
+
+    功能：添加新的集合
+    
+    注: pset_uuid 为集合id，必填
+    
+```
+    示例: 新增名为 crawler_01 的爬虫库
+    curl http://127.0.0.1:61111/api/pset/crawler_01 -X POST -d '{"config":["baidu","google","sogou"]}'
+```
+    
+<a id="pset_put" name="pset_put">PUT</a>
+---
+
+* API: PUT /api/pset/{pset_uuid}
+
+    功能：修改集合
+    
+    注: pset_uuid 为集合id，必填
+    
+```
+    示例: 修改名为 crawler_01 的爬虫库(UA关键字爬虫库改为IP爬虫库)
+    curl http://127.0.0.1:61111/api/pset/crawler_01 -X POST -d '{"config":["1.1.1.1","2.2.2.2","3.3.3.3"]}'
+```
+    
+<a id="pset_delete" name="pset_delete">DELETE</a>
+---
+
+* API: DELETE /api/pset/{pset_uuid}
+
+    功能：删除集合
+    
+    pset_uuid 为集合id，必填
     
 [Back to TOC](#table-of-contents)
 

@@ -3,62 +3,71 @@
 -- Copyright (C) OpenWAF
 
 local _M = {
-    _VERSION = "0.0.1"
+    _VERSION = "1.0.0"
 }
 
-local cjson        = require "cjson.safe"
-local twaf_func    = require "lib.twaf.inc.twaf_func"
-local twaf_conf    = require "lib.twaf.twaf_conf"
+local twaf_func          = require "lib.twaf.inc.twaf_func"
+
+local io_popen           = io.popen
+local _type              = type
+local string_format      = string.format
+local ngx_say            = ngx.say
+local ngx_var            = ngx.var
+local ngx_log            = ngx.log
+local ngx_ERR            = ngx.ERR
+local ngx_req_get_method = ngx.req.get_method
+local ngx_shared         = ngx.shared
+local ngx_worker_id      = ngx.worker.id
+local ngx_worker_pid     = ngx.worker.pid
+local ngx_worker_count   = ngx.worker.count
+
+local api          = {}
 local prefix       = "/api/"
-local arr_index    = "arr_tonumber"
-local show         = {}
-show["post"]       = {}
-show["delete"]     = {}
-show["put"]        = {}
-show["get"]        = {}
+local api_path     = "lib/twaf/twaf_api"
+local api_pre_path = "/opt/OpenWAF/"
 
+api.help                 = {}
+api.help_tb              = {}
 
--------------------------stat------------------------
-
--- get stat, e.g: GET host/path/stat/policy_uuid
-show["get"][prefix.."stat"]       = function(_twaf, log, u)
+local function _load_api_file(tb)
+    local f = io_popen(string_format("ls %s%s/*.lua 2>/dev/null", api_pre_path, api_path))
+    if not f then return end
     
-    if not u[2] then
-        log.result = twaf_reqstat:get_reqstat_main_info()
+    local paths = f:read("*a")
+    f:close()
+    
+    if _type(paths) == "string" and #paths == 0 then
         return
     end
     
-    local policy = _twaf.config.twaf_policy.policy_uuids or {}
-    if not policy[u[2]] and u[2] ~= "policy_all" and u[2] ~= "GLOBAL" then
-        log.success = 0
-        log.reason  = "No policy '"..u[2].."'"
-        return
+    paths = twaf_func:string_trim(paths)
+    paths = twaf_func:string_ssplit(paths,string.char(10))
+    
+    for _, p in pairs(paths) do
+        p = p:sub(#api_pre_path + 1, -5)
+        local mod = require(p)
+        twaf_func.table_merge(tb, mod.api)
+        twaf_func.table_merge(tb.help_tb, mod.help)
     end
     
-    log.result = twaf_reqstat:get_reqstat_uuid_info({u[2]})
-    
-    if not next(log.result) then
-        log.result  = nil
-        log.reason  = "uuid '"..u[2].."' is not exist"
-        log.success = 0
-        return
-    end
-    
-    for i = 3, #u, 1 do
-        log.result = log.result[u[i]]
-        
-        if log.result == nil then
-            log.reason  = "No key named '"..u[i].."'"
-            log.success = 0
-            return
-        end
-    end
-    
-    return
+    return tb
 end
 
--- delete stat, e.g: DELETE host/path/stat
-show["delete"][prefix.."stat"]    = function(_twaf) twaf_reqstat:reqstat_clear() end
+_load_api_file(api)
+
+api.help.get = function(_twaf, _log, u)
+
+    if u[2] then
+        _log.result = api.help_tb[u[2]]
+        return
+    end
+
+    _log.result = api.help_tb
+    
+    -- TODO:
+    -- 1. 替换 host/path/
+    -- 2. 详细说明每一个 API
+end
 
 --[[
 {"success": 1, "result":"xxx"}
@@ -66,16 +75,12 @@ show["delete"][prefix.."stat"]    = function(_twaf) twaf_reqstat:reqstat_clear()
 ]]
 function _M.content(self, _twaf)
 
-    local log   = {}
-    log.success = 1
-    log.reason  = nil
+    local _log   = {}
+    _log.success = 1
+    _log.reason  = nil
     
-    local uri    = ngx.var.uri or "-"
-    local method = (ngx.req.get_method() or "-"):lower()
-    local gcf    = _twaf:get_default_config_param("twaf_global")
-    local dict   = ngx.shared[gcf.dict_name]
-    local wid    = ngx.worker.id()
-    local wpid   = ngx.worker.pid()
+    local uri    = ngx_var.uri or "-"
+    local method = (ngx_req_get_method() or "-"):lower()
     
     -- config synchronization
     twaf_func:syn_config(_twaf)
@@ -84,45 +89,65 @@ function _M.content(self, _twaf)
     
     local from, to, u = uri:find(prefix.."(.*)")
     if not from then
-        log.success = 0
-        log.reason  = "uri not right"
+        _log.success = 0
+        _log.reason  = "uri not right"
         break
     end
     
     u = twaf_func:string_ssplit(u, "/")
-    if type(u) ~= "table" then
-        log.success = 0
-        log.reason  = "string_ssplit was wrong in twaf_func.lua"
+    if _type(u) ~= "table" then
+        _log.success = 0
+        _log.reason  = "string_ssplit was wrong in twaf_func.lua"
         break
     end
     
-    uri = prefix..u[1]
-    
-    if not show[method][uri] then
-        log.success = 0
-        log.reason  = "no api -- " .. u[1]
+    if not api[u[1]] then
+        _log.success = 0
+        _log.reason  = string_format("no api -- %s", u[1])
         break
     end
     
-    show[method][uri](_twaf, log, u)
+    if not api[u[1]][method] then
+        _log.success = 0
+        _log.reason  = string_format("%s: no method %s", u[1], method)
+        break
+    end
+    
+    if #u[#u] == 0 then
+        u[#u] = nil
+    end
+    
+    api[u[1]][method](_twaf, _log, u)
+    
+    if u[1] == "web_tamper_protecting_download" 
+    or u[1] == "web_tamper_tampered_download" then
+        ngx_say(twaf_func:table_to_string(_log.result))
+        return
+    end
     
     until true
     
-    if method ~= "get" and log.success == 1 then
+    if method ~= "get" and _log.success == 1 then
         local worker_config = twaf_func:table_to_string(_twaf.config)
         if worker_config then
+            local gcf    = _twaf:get_default_config_param("twaf_global")
+            local dict   =  ngx_shared[gcf.dict_name]
+            local wid    =  ngx_worker_id()
+            local wpid   =  ngx_worker_pid()
+            local wcount =  ngx_worker_count()
+            
             dict:set("worker_config", worker_config)
-            local wcount = ngx.worker.count()
+            
             for i = 0, wcount -1, 1 do
                 dict:set("worker_process_"..i, true)
             end
             dict:set("worker_process_"..wid, wpid)
         else
-            ngx.log(ngx.ERR, "synchronization Failure!")
+            ngx_log(ngx_ERR, "synchronization Failure!")
         end
     end
     
-    ngx.say(twaf_func:table_to_string(log))
+    ngx_say(twaf_func:table_to_string(_log))
 end
 
 return _M

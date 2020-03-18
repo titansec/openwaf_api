@@ -955,11 +955,11 @@ shm
 <a id="shm_get" name="shm_get">GET</a>
 ---
 
-* API: GET /api/shm/{shm_name}
+* API: GET /api/shm/{shm_name}/{key}
 
     功能: 打印指定 shared_dict 内容
 
-    注: shm_name 表示 shared_dict 的名称
+    注: shm_name 表示 shared_dict 的名称，必填；key 表示 shm 的键值，非必填
 
 [Back to TOC](#table-of-contents)
 
